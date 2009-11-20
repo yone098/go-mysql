@@ -1,0 +1,7 @@
+*.cgo*
+example
+*.o
+*.6
+_obj
+*.8
+*.db
