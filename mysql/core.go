@@ -60,9 +60,9 @@ type ConnectionInfo map[string] Any;
 func use(h interface {}) (rval unsafe.Pointer) {
     switch ptr := h.(type) {
     case C.wm_mysql:      rval = unsafe.Pointer(ptr)
-//    case C.mwrow:   rval = unsafe.Pointer(ptr)
-//    case C.mwres:   rval = unsafe.Pointer(ptr)
-//    case C.mwfield: rval = unsafe.Pointer(ptr)
+    case C.wm_row:   rval = unsafe.Pointer(ptr)
+    case C.wm_res:   rval = unsafe.Pointer(ptr)
+    case C.wm_field: rval = unsafe.Pointer(ptr)
     default:        panic("Tried to use() unknown type\n")
     }
     return;
