@@ -19,7 +19,7 @@ wm_mysql wm_real_connect(wm_mysql mysql, const char *host, const char *user,
 
 void wm_close(wm_mysql mysql);
 
-unsigned long wm_get_client_version();
+unsigned long wm_get_client_version(void);
 
 int wm_errno(wm_mysql mysql);
 

@@ -29,6 +29,6 @@ void wm_close(wm_mysql mysql) {
     mysql_close((MYSQL *)mysql);
 }
 
-unsigned long wm_get_client_version() {
+unsigned long wm_get_client_version(void) {
     return mysql_get_client_version();
 }

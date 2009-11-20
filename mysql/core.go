@@ -37,10 +37,10 @@ func version() (data map[string]string, error os.Error)
 {
     data = make(map[string]string);
 
-    //v := C.wm_get_client_version();
-    tmp := 100;
-    v := fmt.Sprintf("%d", tmp);
-    data["version"] = v;
+    //v := int(C.wm_get_client_version());
+    v := 123;
+    cv := fmt.Sprintf("%d", v);
+    data["version"] = cv;
 
     // mysql source id ?
     data["mysql.sourceid"] = "";
