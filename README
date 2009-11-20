@@ -1,0 +1,22 @@
+Work in progress.
+
+pkg/db
+    Generic database API for Go that supports
+    multiple RDBMSs.
+
+pkg/db/mysql
+    Enable access to MySQL databases from Go.
+
+===
+sample usage
+---
+>git clone git://github.com/yone098/go-mysql.git
+>cd go-mysql
+>make install
+>cd mysql
+>make clean install example
+===
+
+These are in flux constantly, don't rely on them
+yet. Discussions regarding the generic API happen
+mostly on golang-nuts@googlegroups.com for now.
