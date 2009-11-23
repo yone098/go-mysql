@@ -1,38 +1,38 @@
-#ifndef __MYSQL_WRAPPER_H__
-#define __MYSQL_WRAPPER_H__
+#ifndef __WRAPPER_H__
+#define __WRAPPER_H__
 
 /*
     wrapper for mysql
 */
 
 /* really mysql */
-typedef void *wm_mysql;
-typedef void *wm_res;
-typedef void *wm_row;
-typedef void *wm_field;
+typedef void *wmysql;
+typedef void *wres;
+typedef void *wrow;
+typedef void *wfield;
 
-wm_mysql wm_init(wm_mysql mysql);
-const char *wm_error(wm_mysql mysql);
-wm_mysql wm_real_connect(wm_mysql mysql, const char *host, const char *user,
+wmysql wm_init(wmysql mysql);
+const char *wm_error(wmysql mysql);
+wmysql wm_real_connect(wmysql mysql, const char *host, const char *user,
     const char* passwd, const char *db, int port);
-void wm_close(wm_mysql mysql);
+void wm_close(wmysql mysql);
 unsigned long wm_get_client_version(void);
-int wm_errno(wm_mysql mysql);
-const char *wm_error(wm_mysql mysql);
-void mw_free_result(wm_res res);
-int mw_query(wm_mysql mysql, const char *q);
-wm_res mw_store_result(wm_mysql mysql);
-char *mw_row(wm_row row, int i);
-const char *mw_field_name_at(wm_field field, int i);
-int mw_field_type_at(wm_field field, int i);
-int mw_field_count(wm_mysql mysql);
-int mw_num_fields(wm_res res);
-wm_field mw_fetch_fields(wm_res res);
-wm_row mw_fetch_row(wm_res res);
-unsigned long long mw_num_rows(wm_res res);
+int wm_errno(wmysql mysql);
+const char *wm_error(wmysql mysql);
+void wm_free_result(wres res);
+int wms_query(wmysql mysql, const char *q);
+wres wm_store_result(wmysql mysql);
+char *wm_row(wrow row, int i);
+const char *wfield_name_at(wfield field, int i);
+int wfield_type_at(wfield field, int i);
+int wfield_count(wmysql mysql);
+int wm_num_fields(wres res);
+wfield wm_fetch_fields(wres res);
+wrow wm_fetch_row(wres res);
+unsigned long long wm_num_rows(wres res);
 
-void mw_thread_init(void);
-void mw_thread_end(void);
+void wm_thread_init(void);
+void wm_thread_end(void);
  
  
-#endif /* __MYSQL_WRAPPER_H__ */
+#endif /* __WRAPPER_H__ */

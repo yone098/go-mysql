@@ -6,26 +6,26 @@
 #include <stdio.h>
 #include <mysql.h>
 
-wm_mysql wm_init(wm_mysql mysql) {
-    return (wm_mysql)mysql_init((MYSQL *)mysql);
+wmysql wm_init(wmysql mysql) {
+    return (wmysql)mysql_init((MYSQL *)mysql);
 }
 
 
-int wm_errno(wm_mysql mysql) {
+int wm_errno(wmysql mysql) {
     return mysql_errno((MYSQL *)mysql);
 }
 
-const char *wm_error(wm_mysql mysql) {
+const char *wm_error(wmysql mysql) {
     return mysql_error((MYSQL *)mysql);
 }
 
-wm_mysql wm_real_connect(wm_mysql mysql, const char *host, const char *user,
+wmysql wm_real_connect(wmysql mysql, const char *host, const char *user,
     const char* passwd, const char *db, int port) {
-    return (wm_mysql)mysql_real_connect((MYSQL *)mysql, host, user, passwd, db,
+    return (wmysql)mysql_real_connect((MYSQL *)mysql, host, user, passwd, db,
             port, NULL, 0);
 }
 
-void wm_close(wm_mysql mysql) {
+void wm_close(wmysql mysql) {
     mysql_close((MYSQL *)mysql);
 }
 
@@ -33,54 +33,54 @@ unsigned long wm_get_client_version(void) {
     return mysql_get_client_version();
 }
 
-void mw_free_result(wm_res res) {
+void wm_free_result(wres res) {
     mysql_free_result((MYSQL_RES *)res);
 }
 
-int mw_query(wm_mysql mysql, const char *q) {
+int wms_query(wmysql mysql, const char *q) {
     return mysql_query((MYSQL *)mysql, q);
 }
 
-wm_res mw_store_result(wm_mysql mysql) {
-    return (wm_res)mysql_store_result((MYSQL *)mysql);
+wres wm_store_result(wmysql mysql) {
+    return (wres)mysql_store_result((MYSQL *)mysql);
 }
 
-char *mw_row(wm_row row, int i) {
+char *wm_row(wrow row, int i) {
     return (char *)((MYSQL_ROW)row)[i];
 }
 
-const char *mw_field_name_at(wm_field field, int i) {
+const char *wfield_name_at(wfield field, int i) {
     return ((MYSQL_FIELD *)field)[i].name;
 }
 
-int mw_field_type_at(wm_field field, int i) {
+int wfield_type_at(wfield field, int i) {
     return ((MYSQL_FIELD *)field)[i].type;
 }
 
-int mw_field_count(wm_mysql mysql) {
+int wfield_count(wmysql mysql) {
     return mysql_field_count((MYSQL *)mysql);
 }
 
-int mw_num_fields(wm_res res) {
+int wm_num_fields(wres res) {
     return mysql_num_fields((MYSQL_RES *)res);
 }
 
-wm_field mw_fetch_fields(wm_res res) {
-    return (wm_field)mysql_fetch_fields((MYSQL_RES *)res);
+wfield wm_fetch_fields(wres res) {
+    return (wfield)mysql_fetch_fields((MYSQL_RES *)res);
 }
 
-wm_row mw_fetch_row(wm_res res) {
+wrow wm_fetch_row(wres res) {
     return mysql_fetch_row((MYSQL_RES *)res);
 }
 
-unsigned long long mw_num_rows(wm_res res) {
+unsigned long long wm_num_rows(wres res) {
     return mysql_num_rows((MYSQL_RES *)res);
 }
 
-void mw_thread_init(void) {
+void wm_thread_init(void) {
     (void)mysql_thread_init();
 }
 
-void mw_thread_end(void) {
+void wm_thread_end(void) {
     mysql_thread_end();
 }

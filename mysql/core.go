@@ -18,7 +18,25 @@ import "db"
 
 type Connection struct {
     /* pointer to struct mysql */
-    handle C.wm_mysql;
+    handle C.wmysql;
+}
+
+/* MYSQL cursors, will be renamed/refactored soon */
+type Cursor struct {
+    /* statement we were created for */
+    statement *Statement;
+    /* connection we were created on */
+    connection *Connection;
+    /* the last query yielded results */
+    result bool;
+}
+
+type Statement struct {
+    /* pointer to struct mysql statement */
+    handle C.wres;
+    connection *Connection;
+    query string;
+    nfields int;
 }
 
 func init() {
@@ -47,7 +65,7 @@ func version() (data map[string]string, error os.Error)
 
     // versionnumber
     data["mysql.versionnumber"] = "";
-    
+
     return data, nil;
 }
 
@@ -59,16 +77,16 @@ type ConnectionInfo map[string] Any;
 // unsafe pointers instead of _C_typedefname.
 func use(h interface {}) (rval unsafe.Pointer) {
     switch ptr := h.(type) {
-    case C.wm_mysql:      rval = unsafe.Pointer(ptr)
-    case C.wm_row:   rval = unsafe.Pointer(ptr)
-    case C.wm_res:   rval = unsafe.Pointer(ptr)
-    case C.wm_field: rval = unsafe.Pointer(ptr)
+    case C.wmysql:      rval = unsafe.Pointer(ptr)
+    case C.wrow:   rval = unsafe.Pointer(ptr)
+    case C.wres:   rval = unsafe.Pointer(ptr)
+    case C.wfield: rval = unsafe.Pointer(ptr)
     default:        panic("Tried to use() unknown type\n")
     }
     return;
 }
 
-func LastError(mysql C.wm_mysql) os.Error {
+func LastError(mysql C.wmysql) os.Error {
     if err := C.wm_error(use(mysql)); *err != 0 {
         return os.NewError(C.GoString(err));
     }
@@ -85,10 +103,10 @@ func open(info ConnectionInfo) (connection db.Connection, error os.Error)
     conn := new (Connection);
     conn.handle = C.wm_init(nil);
     C.wm_real_connect(
-        use(conn.handle), 
-        args[0], 
-        args[1], 
-        args[2], 
+        use(conn.handle),
+        args[0],
+        args[1],
+        args[2],
         args[3],
         C.int(port));
 
@@ -99,7 +117,7 @@ func open(info ConnectionInfo) (connection db.Connection, error os.Error)
     if error = LastError(conn.handle); error != nil {
         conn.handle = nil;
     }
-    
+
     connection = conn;
 
     return;
@@ -125,7 +143,13 @@ func (self *Connection) error() (error os.Error) {
 */
 func (self *Connection) Prepare(query string) (statement db.Statement, error os.Error)
 {
-    return nil, nil;
+    s := new(Statement);
+    s.query = query;
+    s.connection = self;
+
+    statement = s;
+
+    return;
 }
 
 /*
@@ -133,13 +157,100 @@ func (self *Connection) Prepare(query string) (statement db.Statement, error os.
 */
 func (self *Connection) Execute(statement db.Statement, parameters ...) (cursor db.Cursor, error os.Error)
 {
-    return nil, nil;
+    // TODO lock
+    s, ok := statement.(*Statement);
+    if !ok {
+        error = &InterfaceError{"Execute: Not an mysql statement!"};
+        return;
+    }
+    // TODO bind parameter
+    query := fmt.Sprintf(s.query, parameters);
+    q := C.CString(query);
+    rcode := C.wms_query(use(self.handle), q);
+    C.free(unsafe.Pointer(q));
+
+    if error = LastError(self.handle); error != nil || rcode != 0 {
+        if error == nil { 
+            error = os.NewError("Query failed.") 
+        }
+        return;
+    }
+    s.nfields = int(C.wfield_count(use(self.handle)));
+    s.handle = C.wm_store_result(use(self.handle));
+    error = LastError(self.handle);
+    if error != nil || (s.handle == nil && s.nfields > 0) {
+        if error == nil {
+            error = os.NewError("No results returned.");
+            s.cleanup();
+        }
+        return;
+    }
+    c := new(Cursor);
+    c.statement = s;
+    c.connection = self;
+    c.result = true;
+    cursor = c;
+
+    return;
+}
+
+func (self *Statement) cleanup() {
+    if self.handle != nil {
+        C.wm_free_result(use(self.handle));
+        self.handle = nil;
+        self.nfields = 0;
+    }
 }
 
 func (self *Connection) Close() (error os.Error) {
     C.wm_close(use(self.handle));
     self.handle = nil;
     return;
+}
+
+/* === Cursor === */
+
+
+func (self *Cursor) FetchOne() (data []interface {}, error os.Error)
+{
+    if !self.result {
+        error = &InterfaceError{"FetchOne: No results to fetch!"};
+        return;
+    }
+    
+    row := C.wm_fetch_row(use(self.statement.handle));
+    error = LastError(self.connection.handle);
+
+    if row != nil && error == nil {
+        data = make([]interface {}, self.statement.nfields);
+        for i := 0; i < self.statement.nfields; i += 1 {
+            data[i] = C.GoString(C.wm_row(use(row), C.int(i)));
+        }
+    }
+
+    return;
+}
+
+func (self *Cursor) FetchMany(count int) ([][]interface {}, os.Error)
+{
+    return nil, nil;
+}
+
+func (self *Cursor) FetchAll() ([][]interface {}, os.Error)
+{
+    return nil, nil;
+}
+
+// Returns the number of rows returned from the current result set.
+func (self *Cursor) RowCount() uint64 {
+    if !self.result { return 0 }
+    return uint64(C.wm_num_rows(use(self.statement.handle)));
+}
+
+func (self *Cursor) Close() os.Error
+{
+    self.statement.cleanup();
+    return nil;
 }
 
 
