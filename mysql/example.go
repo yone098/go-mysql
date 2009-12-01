@@ -1,7 +1,8 @@
 package main
 
 import (
-    "db/mysql";
+    //"db/mysql";
+    "mysql";
     "fmt";
     "os";
     "rand";
@@ -77,6 +78,27 @@ func main() {
         fmt.Printf("row[%d]: %s\n", i, tuple[0]);
     }
     cur.Close();
+
+    fmt.Printf("=====\n\nAbout to fetch many row\n");
+    s, e = c.Prepare("SELECT * FROM __hello ORDER BY i ASC");
+    cur, e = c.Execute(s);
+    rows, e := cur.FetchMany(10);
+    fmt.Printf("%s\n", rows);
+    for _, y := range rows {
+        fmt.Printf("data: %s\n", y);
+    }
+    cur.Close();
+
+    fmt.Printf("=====\n\nAbout to fetch all row\n");
+    s, e = c.Prepare("SELECT * FROM __hello ORDER BY i ASC");
+    cur, e = c.Execute(s);
+    rows, e = cur.FetchAll();
+    fmt.Printf("%s\n", rows);
+    for _, y := range rows {
+        fmt.Printf("data: %s\n", y);
+    }
+    cur.Close();
+
     e = c.Close();
     if e != nil {
         fmt.Printf("close error: %s\n", e.String());

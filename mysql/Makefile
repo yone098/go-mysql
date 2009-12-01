@@ -1,6 +1,7 @@
 include $(GOROOT)/src/Make.$(GOARCH)
 
-TARG=db/mysql
+#TARG=db/mysql
+TARG=mysql
 CGOFILES=core.go
 GOFILES=error.go
 MYSQL_CONFIG=$(shell which mysql_config)

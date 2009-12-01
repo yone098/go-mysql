@@ -16,6 +16,8 @@ import "unsafe"
 import "os"
 import "db"
 
+var MaxFetchCount = 65535
+
 type Connection struct {
     /* pointer to struct mysql */
     handle C.wmysql;
@@ -231,14 +233,30 @@ func (self *Cursor) FetchOne() (data []interface {}, error os.Error)
     return;
 }
 
-func (self *Cursor) FetchMany(count int) ([][]interface {}, os.Error)
+func (self *Cursor) FetchMany(count int) (data [][]interface {}, error os.Error)
 {
-    return nil, nil;
+    if count == 0 { return nil, os.NewError("Invalid count") }
+
+    data = make([][]interface {}, count);
+    i := 0;
+    row, err := self.FetchOne();
+    for i < count && row != nil && err == nil {
+        data[i] = row;
+        i += 1;
+        row, err = self.FetchOne();
+    }
+    if err != nil { data = nil }
+
+    return;
 }
 
 func (self *Cursor) FetchAll() ([][]interface {}, os.Error)
 {
-    return nil, nil;
+    count := self.RowCount();
+    if uint64(MaxFetchCount) <= count {
+        return nil, os.NewError("Too many rows in result set. Use Fetch One or FetchMany insted");
+    }
+    return self.FetchMany(int(count));
 }
 
 // Returns the number of rows returned from the current result set.
