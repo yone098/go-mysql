@@ -15,12 +15,14 @@ import "fmt"
 import "unsafe"
 import "os"
 import "db"
+import "sync"
 
 var MaxFetchCount = 65535
 
 type Connection struct {
     /* pointer to struct mysql */
     handle C.wmysql;
+    queryLock sync.Mutex;
 }
 
 /* MYSQL cursors, will be renamed/refactored soon */
@@ -159,7 +161,8 @@ func (self *Connection) Prepare(query string) (statement db.Statement, error os.
 */
 func (self *Connection) Execute(statement db.Statement, parameters ...) (cursor db.Cursor, error os.Error)
 {
-    // TODO lock
+    self.lock();
+
     s, ok := statement.(*Statement);
     if !ok {
         error = &InterfaceError{"Execute: Not an mysql statement!"};
@@ -175,7 +178,7 @@ func (self *Connection) Execute(statement db.Statement, parameters ...) (cursor 
         if error == nil { 
             error = os.NewError("Query failed.") 
         }
-        return;
+        goto UnlockAndReturn;
     }
     s.nfields = int(C.wfield_count(use(self.handle)));
     s.handle = C.wm_store_result(use(self.handle));
@@ -185,7 +188,7 @@ func (self *Connection) Execute(statement db.Statement, parameters ...) (cursor 
             error = os.NewError("No results returned.");
             s.cleanup();
         }
-        return;
+        goto UnlockAndReturn;
     }
     c := new(Cursor);
     c.statement = s;
@@ -193,8 +196,23 @@ func (self *Connection) Execute(statement db.Statement, parameters ...) (cursor 
     c.result = true;
     cursor = c;
 
+UnlockAndReturn:
+    self.unlock();
     return;
 }
+
+
+func (self *Connection) Close() (error os.Error) {
+    C.wm_close(use(self.handle));
+    self.handle = nil;
+    return;
+}
+
+func (self *Connection) lock() { self.queryLock.Lock() }
+func (self *Connection) unlock() { self.queryLock.Unlock() }
+
+/* === Statement === */
+
 
 func (self *Statement) cleanup() {
     if self.handle != nil {
@@ -202,12 +220,6 @@ func (self *Statement) cleanup() {
         self.handle = nil;
         self.nfields = 0;
     }
-}
-
-func (self *Connection) Close() (error os.Error) {
-    C.wm_close(use(self.handle));
-    self.handle = nil;
-    return;
 }
 
 /* === Cursor === */
