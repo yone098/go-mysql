@@ -1,6 +1,9 @@
 /*
 
     mysql wrapper 
+    This source code was made referring to Eden's and Peter's source code.
+    Eden http://github.com/eden/mysqlgo
+    Peter http://github.com/phf/go-sqlite
 
 */
 package mysql
